@@ -1,17 +1,11 @@
 plot_figures <- function(fit_data, daily_data) {
   summary_fit <- summarise_model_fit(fit_data, c(0.025, 0.25, 0.75, 0.975))
 
-  Iforecast_plot_data = summary_fit$I_forecast %>%
-    format_plot_data(., max(aggregated_real_data$week))
-
-  Rforecast_plot_data = summary_fit$R_forecast %>%
-    format_plot_data(., max(aggregated_real_data$week))
-
-  R_plot_data <- summary_fit$R_T %>%
-    format_plot_data(., min(real_data$diagnosis_date))
+    R_plot_data <- summary_fit$R_T %>%
+    format_plot_data(., min(daily_data$diagnosis_date))
 
   I_plot_data <- summary_fit$I_T %>%
-    format_plot_data(., min(real_data$diagnosis_date))
+    format_plot_data(., min(daily_data$diagnosis_date))
 
 
   figure1 <- ggplot(daily_data, aes(x = diagnosis_date)) +
