@@ -23,6 +23,7 @@ alpha <- 3
 beta <- 0.5
 area_scenarios = tibble(area = 30)
 missing_scenarios = tibble(window = 7, filter = 1)
+plot_quantiles = c(0.025, 0.25, 0.75, 0.975)
 
 # List of targets for paper.
 list(
@@ -52,7 +53,8 @@ list(
           beta
         )
       ),
-      tar_target(aggregated_plots, plot_figures(covid_fit$model_fit,real_data))
+      tar_target(summ_covid_fit, summarise_model_fit(covid_fit$model_fit, plot_quantiles)),
+      tar_target(aggregated_plots, plot_figures(summ_covid_fit,real_data))
     )
   )
 )

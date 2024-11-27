@@ -1,6 +1,4 @@
-plot_figures <- function(fit_data, daily_data) {
-  summary_fit <- summarise_model_fit(fit_data, c(0.025, 0.25, 0.75, 0.975))
-
+plot_figures <- function(summary_fit, daily_data) {
   R_plot_data <- summary_fit$R_T %>%
     format_plot_data(., min(daily_data$diagnosis_date))
 
