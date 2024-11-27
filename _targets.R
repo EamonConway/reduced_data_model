@@ -19,8 +19,8 @@ tar_option_set(
 
 # Run the R scripts in the R/ folder with your custom functions:
 tar_source()
-alpha <- 1e-2
-beta <- 1e-2
+alpha <- 3
+beta <- 0.5
 area_scenarios = tibble(area = 30)
 missing_scenarios = tibble(window = 7, filter = 1)
 
@@ -38,17 +38,21 @@ list(
       daily_fit,
       daily_model(real_data, covid_generation_interval, alpha, beta, area)
     ),
-    tar_map(values = missing_scenarios, tar_target(
-      covid_fit,
-      reduced_data_model(
-        real_data,
-        covid_generation_interval,
-        area,
-        window,
-        filter,
-        alpha,
-        beta
-      )
-    ))
+    tar_map(
+      values = missing_scenarios,
+      tar_target(
+        covid_fit,
+        reduced_data_model(
+          real_data,
+          covid_generation_interval,
+          area,
+          window,
+          filter,
+          alpha,
+          beta
+        )
+      ),
+      tar_target(aggregated_plots, plot_figures(covid_fit$model_fit,real_data))
+    )
   )
 )
