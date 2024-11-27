@@ -1,12 +1,9 @@
-plot_figures <- function(summary_fit, daily_data) {
-  R_plot_data <- summary_fit$R_T %>%
-    format_plot_data(., min(daily_data$diagnosis_date))
-
+plot_incidence <- function(summary_fit, daily_data) {
   I_plot_data <- summary_fit$I_T %>%
     format_plot_data(., min(daily_data$diagnosis_date))
 
   daily_data <- daily_data %>% filter(diagnosis_date %in% I_plot_data$diagnosis_date)
-  figure1 <- ggplot(daily_data, aes(x = diagnosis_date)) +
+  ggplot(daily_data, aes(x = diagnosis_date)) +
     geom_ribbon(
       data = I_plot_data,
       aes(ymin = mid_lower, ymax = mid_upper),
@@ -26,8 +23,14 @@ plot_figures <- function(summary_fit, daily_data) {
     scale_x_date("Day") +
     theme_classic() +
     theme(text = element_text(size = 16))
+}
 
-  figure2 <- ggplot(R_plot_data, aes(x = diagnosis_date)) +
+plot_effective_reproduction_number <-function(summary_fit, daily_data){
+  R_plot_data <- summary_fit$R_T %>%
+    format_plot_data(., min(daily_data$diagnosis_date))
+  daily_data <- daily_data %>% filter(diagnosis_date %in% R_plot_data$diagnosis_date)
+
+  ggplot(R_plot_data, aes(x = diagnosis_date)) +
     geom_ribbon(aes(ymin = mid_lower, ymax = mid_upper),
                 alpha = 0.8,
                 fill = "#7570b3") +
@@ -43,8 +46,7 @@ plot_figures <- function(summary_fit, daily_data) {
     scale_x_date("Day") +
     theme_classic() +
     theme(text = element_text(size = 16))
-  return(list(I_t = figure1, R_t = figure2))
-  }
+}
   #
   # phi_plot <- mcmc_areas(
   #   fit,
