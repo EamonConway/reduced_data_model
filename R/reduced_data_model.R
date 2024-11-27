@@ -1,4 +1,10 @@
-reduced_data_model <- function(data, g, Area, window_size, filter_size,alpha,beta) {
+reduced_data_model <- function(data,
+                               g,
+                               Area,
+                               window_size,
+                               filter_size,
+                               alpha,
+                               beta) {
   lambda = -log(Area / 100)
   if (is.numeric(window_size)) {
     windows <- seq(0, 100, by = window_size)
@@ -50,5 +56,5 @@ reduced_data_model <- function(data, g, Area, window_size, filter_size,alpha,bet
     cores = 4,
     control = list(max_treedepth = 12)
   )
- return(list(model_fit = fit,model_data = stan_data))
+  return(list(model_fit = fit, model_data = stan_data))
 }
