@@ -54,7 +54,8 @@ list(
         )
       ),
       tar_target(summ_covid_fit, summarise_model_fit(covid_fit$model_fit, plot_quantiles)),
-      tar_target(aggregated_plots, plot_figures(summ_covid_fit,real_data))
+      tar_target(incidence_plot, plot_incidence(summ_covid_fit,real_data)),
+      tar_target(reproduction_plot, plot_effective_reproduction_number(summ_covid_fit,real_data))
     )
   )
 )
