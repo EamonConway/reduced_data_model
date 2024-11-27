@@ -1,4 +1,4 @@
-reduced_data_model <- function(g, Area, window_size, filter_size) {
+reduced_data_model <- function(data, g, Area, window_size, filter_size) {
   alpha = 3
   beta = 0.5
   lambda = -log(Area / 100)
@@ -10,13 +10,7 @@ reduced_data_model <- function(g, Area, window_size, filter_size) {
   windows <- windows[which(windows < 100)]
 
   # Real Data
-  real_data <- read_csv("data/victoria_data.csv") %>%
-    select(diagnosis_date, Total_case_count) %>%
-    group_by(diagnosis_date) %>%
-    summarise(cases = sum(Total_case_count)) %>%
-    mutate(diagnosis_date = ymd(diagnosis_date)) %>%
-    filter(diagnosis_date < dmy("01-09-2021") + 7 * 15,
-           diagnosis_date >= dmy("01-09-2021")) %>%
+  real_data <- data %>%
     mutate(date_group = cut(diagnosis_date, breaks = min(diagnosis_date) + windows) %>%
              as_date())
 
@@ -58,7 +52,10 @@ reduced_data_model <- function(g, Area, window_size, filter_size) {
     cores = 4,
     control = list(max_treedepth = 12)
   )
+ return(fit)
+}
 
+second_half <- function(fit, g, Area, window_size, filter_size) {
   summary_fit <- summarise_model_fit(fit, c(0.025, 0.25, 0.75, 0.975))
 
   Iforecast_plot_data = summary_fit$I_forecast %>%
