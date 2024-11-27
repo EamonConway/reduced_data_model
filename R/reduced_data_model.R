@@ -1,12 +1,4 @@
-reduced_data_model <- function(Area, window_size, filter_size) {
-  g_mean <- 3.6
-  g_var <- 3.1 ^ 2
-  g_shape <- g_mean ^ 2 / g_var
-  g_scale <- g_var / g_mean
-  s <- 0:16
-  g <- pgamma(s[-1], shape = g_shape, scale = g_scale) - pgamma(s[-length(s)], shape = g_shape, scale = g_scale)
-  g <- g / sum(g)
-
+reduced_data_model <- function(g, Area, window_size, filter_size) {
   alpha = 3
   beta = 0.5
   lambda = -log(Area / 100)
