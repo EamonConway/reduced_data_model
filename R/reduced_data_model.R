@@ -7,11 +7,11 @@ reduced_data_model <- function(data,
                                beta) {
   lambda = -log(Area / 100)
   if (is.numeric(window_size)) {
-    windows <- seq(0, 100, by = window_size)
+    windows <- seq(0, nrow(data), by = window_size)
   } else {
     windows <- c(0, cumsum(sample(1:10, 40, replace = TRUE)))
   }
-  windows <- windows[which(windows < 100)]
+  windows <- windows[which(windows < nrow(data))]
 
   # Real Data
   real_data <- data %>%

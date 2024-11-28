@@ -4,6 +4,6 @@ load_and_filter_real_data<- function(filename){
            group_by(diagnosis_date) %>%
            summarise(cases = sum(Total_case_count)) %>%
            mutate(diagnosis_date = ymd(diagnosis_date)) %>%
-           filter(diagnosis_date < dmy("01-09-2021") + 7*15,
+           filter(diagnosis_date < dmy("01-09-2021") + 7*30,
                   diagnosis_date >= dmy("01-09-2021")))
 }
