@@ -50,11 +50,12 @@ reduced_data_model <- function(data,
   fit <- rstan::stan(
     file = "binomial_aggregate.stan",
     data = stan_data,
-    warmup = 2000,
-    iter = 8000,
+    warmup = 8000,
+    iter = 20000,
     chains = 4,
     cores = 4,
-    control = list(max_treedepth = 12)
+    control = list(max_treedepth = 15,
+                   adapt_delta = 0.95)
   )
   return(list(model_fit = fit, model_data = stan_data))
 }

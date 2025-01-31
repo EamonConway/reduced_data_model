@@ -19,54 +19,224 @@ tar_option_set(
 
 # Run the R scripts in the R/ folder with your custom functions:
 tar_source()
-alpha <- 1
-beta <- 1
-area_scenarios = tibble(area = 30)
-missing_scenarios = tibble(window = 7, filter = 1)
-plot_quantiles = c(0.025, 0.25, 0.75, 0.975)
 
-real_data_pipeline <- list(
-  tar_target(data_file, "data/victoria_data.csv", format = "file"),
-  tar_target(real_data, load_and_filter_real_data(data_file)),
+# Parameters to run all simulations.
+plot_quantiles = c(0.025, 0.25, 0.75, 0.975)
+data_scenarios <- tibble::tibble(filename = c("data/victoria_data.csv"))
+day_scenarios = tibble::tibble(days = c(7*15,7*30))
+prior_scenarios = tibble::tibble(area = c(50),alpha = c(3),beta = c(0.5))
+missing_scenarios = tibble::tibble(window = list(7,14,4,1,7,"Random"), filter = c(1,1,1,2,2,1))
+base_scenarios = tidyr::expand_grid(data_scenarios,day_scenarios,prior_scenarios)
+missing_model_scenarios = tidyr::expand_grid(missing_scenarios)
+
+save_real_data_figures <- list(
   tar_target(
-    covid_generation_interval,
-    define_generation_interval(3.6, 3.1, 16)
+    saved_reproduction_plot,
+    ggsave(
+      paste0(
+        "final_pictures/RealData/ReproductionWindow",
+        window,
+        "Filter",
+        filter,
+        "Area",
+        area,
+        "Days",
+        days,
+        ".png"
+      ),
+      plot = reproduction_plot,
+      width = 89,
+      height = 60,
+      units = "mm",
+      dpi = 300,
+      create.dir = TRUE
+    ),
+    format = "file"
   ),
-  tar_map(
-    values = area_scenarios,
-    tar_target(
-      daily_fit,
-      daily_model(real_data, covid_generation_interval, alpha, beta, area)
-    ),
-    tar_target(
-      summ_daily_fit,
-      summarise_daily_model_fit(daily_fit, plot_quantiles)
-    ),
-    tar_map(
-      values = missing_scenarios,
-      tar_target(
-        covid_fit,
-        reduced_data_model(
-          real_data,
-          covid_generation_interval,
-          area,
-          window,
-          filter,
-          alpha,
-          beta
-        )
+  tar_target(
+    saved_incidence_plot,
+    ggsave(
+      paste0(
+        "final_pictures/RealData/IncidenceWindow",
+        window,
+        "Filter",
+        filter,
+        "Area",
+        area,
+        "Days",
+        days,
+        ".png"
       ),
-      tar_target(
-        summ_covid_fit,
-        summarise_model_fit(covid_fit$model_fit, plot_quantiles)
-      ),
-      tar_target(incidence_plot, plot_incidence(summ_covid_fit, real_data)),
-      tar_target(
-        reproduction_plot,
-        plot_effective_reproduction_number(summ_covid_fit, summ_daily_fit, real_data)
-      )
-    )
+      plot = incidence_plot,
+      width = 89,
+      height = 60,
+      units = "mm",
+      dpi = 300,
+      create.dir = TRUE
+    ),
+    format = "file"
   )
 )
 
-list(real_data_pipeline)
+set_generation_interval <- tar_target(
+  covid_generation_interval,
+  define_generation_interval(3.6, 3.1, 16)
+)
+
+load_data <- list(
+  tar_target(data_file, filename, format = "file"),
+  tar_target(data, load_and_filter_real_data(data_file,days))
+)
+
+base_scenario_pipeline <- list(
+  tar_target(
+    base_covid_fit,
+    reduced_data_model(
+      data,
+      covid_generation_interval,
+      area,
+      1,
+      1,
+      alpha,
+      beta
+    )
+  ),
+  tar_target(base_crps_covid,
+             calculate_crps(base_covid_fit,data)),
+  tar_target(daily_covid_fit, daily_model(data, covid_generation_interval, alpha, beta, area)),
+  tar_target(summ_daily_covid_fit, summarise_daily_model_fit(daily_covid_fit, plot_quantiles))
+)
+
+scenario_pipeline <- list(
+  tar_target(
+    fit,
+    reduced_data_model(
+      data,
+      covid_generation_interval,
+      area,
+      window,
+      filter,
+      alpha,
+      beta
+    )),
+  tar_target(summary_fit,summarise_model_fit(fit$model_fit, plot_quantiles)),
+  tar_target(incidence_plot, plot_incidence(summary_fit, data)),
+  tar_target(fit_skill, tibble::tibble(area = area, window = list(window), filter = filter, alpha = alpha, beta= beta, skill = calculate_mean_skill(base_crps_covid,calculate_crps(fit,data)))),
+  tar_target(reproduction_plot, plot_effective_reproduction_number(summary_fit, summ_daily_covid_fit, data)),
+  save_real_data_figures
+)
+
+all_missing_scenarios <- tar_map(values = missing_model_scenarios,
+                                 scenario_pipeline,
+                                 unlist = FALSE)
+
+# We want to demonstrate stability over time points - lets look at weekly.
+incremental_data_scenarios <- tibble::tibble(filename = c("data/victoria_data.csv"), increment = "increment", area = 0.5, alpha = 3,beta = 0.5, days = seq(4,12,by = 1)*7,window = 7,filter = 1)
+
+incremental_scenario_pipeline <- list(
+  tar_target(
+    fit,
+    reduced_data_model(
+      data,
+      covid_generation_interval,
+      area,
+      window,
+      filter,
+      alpha,
+      beta
+    )),
+  tar_target(summary_fit,summarise_model_fit(fit$model_fit, plot_quantiles)),
+  tar_target(tibble_summary_incidence, tibble::as_tibble(t(summary_fit$I_T)) |> dplyr::mutate(day = dplyr::row_number() + min(data$diagnosis_date), Day = as.factor(days))),
+  tar_target(tibble_summary_R_T, tibble::as_tibble(t(summary_fit$R_T)) |> dplyr::mutate(day = dplyr::row_number()+ min(data$diagnosis_date), Day = as.factor(days)))
+)
+
+incremental_data_scenarios <- tar_map(values = incremental_data_scenarios,
+                                      load_data,
+                                      incremental_scenario_pipeline,
+                                      unlist = FALSE)
+
+epi_estim_comparison <- list(
+  tar_target(epi_estim_solve, epiestim_estimate(fit_7_1_data.victoria_data.csv_210_50_3_0.5$model_data)),
+  tar_target(epi_estim_incidence,get_epiestim_incidence(epi_estim_solve)),
+  tar_target(epi_estim_rt,get_epiestim_rt(epi_estim_solve)),
+  tar_target(epi_estim_incidence_plot, epiestim_plot_incidence(epi_estim_incidence,summary_fit_7_1_data.victoria_data.csv_210_50_3_0.5,data_data.victoria_data.csv_210_50_3_0.5)),
+  tar_target(epi_estim_solve_short, epiestim_estimate(fit_7_1_data.victoria_data.csv_105_50_3_0.5$model_data)),
+  tar_target(epi_estim_incidence_short,get_epiestim_incidence(epi_estim_solve_short)),
+  tar_target(epi_estim_rt_short,get_epiestim_rt(epi_estim_solve_short)),
+  tar_target(epi_estim_incidence_plot_short, epiestim_plot_incidence(epi_estim_incidence_short,summary_fit_7_1_data.victoria_data.csv_105_50_3_0.5,data_data.victoria_data.csv_105_50_3_0.5)),
+  tar_target(epi_estim_rt_plot_short, epiestim_plot_rt(epi_estim_rt_short,summary_fit_7_1_data.victoria_data.csv_105_50_3_0.5,data_data.victoria_data.csv_105_50_3_0.5)),
+  tar_target(
+    epi_estim_saved_incidence_plot,
+    ggsave(
+      "final_pictures/RealData/EpiEstimIncidenceWindow7Filter1Days105.png",
+      plot = epi_estim_incidence_plot_short,
+      width = 89,
+      height = 60,
+      units = "mm",
+      dpi = 300,
+      create.dir = TRUE
+    ),
+    format = "file"
+  ),
+  tar_target(
+    epi_estim_saved_rt_plot,
+    ggsave(
+      "final_pictures/RealData/EpiEstimReproductionWindow7Filter1Days105.png",
+      plot = epi_estim_rt_plot_short,
+      width = 89,
+      height = 60,
+      units = "mm",
+      dpi = 300,
+      create.dir = TRUE
+    ),
+    format = "file"
+  )
+)
+
+
+list(
+  set_generation_interval,
+  tar_map(
+    values = base_scenarios,
+    list(load_data,
+         base_scenario_pipeline,
+         all_missing_scenarios,
+         tar_combine(crps_table, all_missing_scenarios[["fit_skill"]],command  = dplyr::bind_rows(!!!.x))),
+    unlist = FALSE),
+  incremental_data_scenarios,
+  tar_combine(incremental_plot_summ_incidence, incremental_data_scenarios[["tibble_summary_incidence"]],command = dplyr::bind_rows(!!!.x)),
+  tar_combine(incremental_plot_summ_rt, incremental_data_scenarios[["tibble_summary_R_T"]],command = dplyr::bind_rows(!!!.x)),
+  tar_target(incremental_plot_incidence, plot_consistency_incidence(incremental_plot_summ_incidence)),
+  tar_target(incremental_plot_rt, plot_consistency_rt(incremental_plot_summ_rt)),
+  tar_target(
+    saved_incremental_plot_rt,
+    ggsave(
+      "final_pictures/RealData/IncrementalRt.png",
+      plot = incremental_plot_rt,
+      width = 89,
+      height = 60,
+      units = "mm",
+      dpi = 300,
+      create.dir = TRUE
+    ),
+    format = "file"
+  ),
+  tar_target(
+    saved_incremental_plot_incidence,
+    ggsave(
+      "final_pictures/RealData/IncrementalIncidence.png",
+      plot = incremental_plot_incidence,
+      width = 89,
+      height = 60,
+      units = "mm",
+      dpi = 300,
+      create.dir = TRUE
+    ),
+    format = "file"
+  ),
+  epi_estim_comparison
+)
+
+
+# ggplot(plot_it,aes(x = day,color = as.factor(scenarios))) + geom_ribbon(aes(ymin = `2.5%`,ymax = `97.5%`, fill = as.factor(scenarios)),alpha = 0.2)
+# ggplot(plot_data,aes(x = day,color = as.factor(scenarios))) + geom_ribbon(aes(ymin = `2.5%`,ymax = `97.5%`, fill = as.factor(scenarios)),alpha = 0.2) + scale_fill_brewer(palette = "YlGnBu") + scale_colour_brewer(palette = "YlGnBu")

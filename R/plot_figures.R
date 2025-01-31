@@ -1,3 +1,14 @@
+format_plot_data <- function(quantile_data,start_date){
+  tibble::tibble(
+    lower = quantile_data[1,],
+    mid_lower = quantile_data[2,],
+    mid_upper = quantile_data[3,],
+    upper = quantile_data[4,]
+  ) %>%
+    mutate(diagnosis_date = row_number() + start_date-1)
+}
+
+
 plot_incidence <- function(summary_fit, daily_data) {
   I_plot_data <- summary_fit$I_T %>%
     format_plot_data(., min(daily_data$diagnosis_date))
@@ -16,6 +27,7 @@ plot_incidence <- function(summary_fit, daily_data) {
       alpha = 0.5,
       fill = "#7570b3"
     ) +
+    # geom_vline(xintercept = aggregated_data$week-1,linetype="dotted") +
     geom_point(aes(y = cases), size = 0.5)  +
     scale_y_continuous("Daily Incidence") +
     scale_x_date("Day") +
@@ -47,88 +59,17 @@ plot_effective_reproduction_number <- function(summary_fit, summary_daily, daily
     geom_ribbon(data = R_plot_data,
                 aes(ymin = lower, ymax = upper),
                 alpha = 0.5) +
-    scale_y_continuous("R Effective") +
-    scale_x_date("Day") +
+    scale_y_continuous("R Effective",limits = c(0.0,max(R_plot_data$mid_upper)+0.5)) +
+    scale_x_date("Day",limits = c(min(R_plot_data$diagnosis_date),max(R_plot_data$diagnosis_date)+5)) +
     theme_classic() +
-    theme(text = element_text(size = 16))+
+    # theme(text = element_text(size = 16))+
     scale_fill_manual(values = c("#d95f02", "#7570b3")) +
     theme(
       text = element_text(size = 16),
       legend.title = element_blank(),
-      legend.text = element_text(size = 10, ),
+      legend.text = element_text(size = 8),
       legend.position = "inside",
-      legend.justification = c(0.90, 0.95)
-    )
+      legend.justification = c(0.95, 0.95),
+      legend.key.size = unit(3,"mm")
+      )
 }
-#
-# phi_plot <- mcmc_areas(
-#   fit,
-#   "phi",
-#   transformations = function(x)
-#     1 / x
-# ) + scale_x_continuous("Overdispersion")
-# ggsave(
-#   paste0(
-#     "final_pictures/RealData/PhiWindow",
-#     window_size,
-#     "Filter",
-#     filter_size,
-#     "Area",
-#     Area,
-#     ".png"
-#   ),
-#   plot = phi_plot,
-#   width = 89,
-#   height = 60,
-#   units = "mm",
-#   dpi = 300,
-#   create.dir = TRUE
-# )
-# ggsave(
-#   paste0(
-#     "final_pictures/RealData/ReproductionWindow",
-#     window_size,
-#     "Filter",
-#     filter_size,
-#     "Area",
-#     Area,
-#     ".png"
-#   ),
-#   plot = figure2,
-#   width = 89,
-#   height = 60,
-#   units = "mm",
-#   dpi = 300,
-#   create.dir = TRUE
-# )
-#
-# figure2_forecast <- figure2 + geom_ribbon(
-#   data = Rforecast_plot_data,
-#   aes(ymin = mid_lower, ymax = mid_upper),
-#   alpha = 0.8,
-#   fill = "#1b9e77"
-# ) +
-#   geom_ribbon(
-#     data = Rforecast_plot_data,
-#     aes(ymin = lower, ymax = upper),
-#     alpha = 0.5,
-#     fill = "#1b9e77"
-#   )
-# ggsave(
-#   paste0(
-#     "final_pictures/RealData/ReproductionWindow",
-#     window_size,
-#     "Filter",
-#     filter_size ,
-#     "Area",
-#     Area,
-#     "Forecast.png"
-#   ),
-#   plot = figure2_forecast,
-#   width = 89,
-#   height = 60,
-#   units = "mm",
-#   dpi = 300,
-#   create.dir = TRUE
-# )
-# }

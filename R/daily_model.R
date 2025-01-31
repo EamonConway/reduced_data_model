@@ -1,7 +1,7 @@
 daily_model <- function(daily_data,g,alpha,beta,Area){
   lambda = -log(Area / 100)
   daily_stan_data <- list(
-    N_days = nrow(daily_data),
+    N_days =  nrow(daily_data),
     D = daily_data$cases,
     N_generation = length(g),
     g = g,
@@ -15,10 +15,11 @@ daily_model <- function(daily_data,g,alpha,beta,Area){
   stan(
     file = "daily.stan",
     data = daily_stan_data,
-    warmup = 2000,
-    iter = 8000,
+    warmup = 8000,
+    iter = 20000,
     chains = 4,
-    cores = 4
+    cores = 4,
+    control = list(adapt_delta = 0.95)
   )
 }
 #

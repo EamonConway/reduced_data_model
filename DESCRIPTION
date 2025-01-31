@@ -1,0 +1,15 @@
+Package: reduceddatamodel
+Type: Package
+Title: Joint estimation of daily incidence and the effective reproduction number in the presence of missing and aggregated data.
+Version: 0.1.0
+Author: Eamon Conway
+Maintainer: Eamon Conway <conway.e@wehi.edu.au>
+Description: Disease surveillance is an integral component of government policy, allowing public health professionals to monitor transmission of infectious diseases and appropriately apply interventions. 
+To aid with surveillance efforts, there has been extensive development of mathematical models to help inform policy decisions,
+However, these mathematical models rely upon data streams that are expensive and often only practical for high income countries.
+With a growing focus on equitable public health tools there is a dire need for development of mathematical models that are equipped to handle the data stream challenges prevalent in low and middle income countries, where data is often incomplete and subject to aggregation.
+To address this need, we develop a mathematical model for the joint estimation of the effective reproduction number and daily incidence of an infectious disease using incomplete and aggregated data. 
+Our investigation demonstrates that this novel mathematical model is robust across a variety of reduced data streams, making it suitable for application in diverse regions.
+License: 
+Encoding: UTF-8
+LazyData: true
