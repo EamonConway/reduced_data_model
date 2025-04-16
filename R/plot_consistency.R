@@ -5,7 +5,7 @@ plot_consistency <-function(summ){
     theme(
       text = element_text(size = 16),
       legend.text = element_text(size = 10, ),
-      legend.position = "inside",
+      legend.position = "none",
       legend.justification = c(0.90, 0.95)
     )
 }

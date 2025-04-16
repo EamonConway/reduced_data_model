@@ -49,7 +49,7 @@ epiestim_plot_rt <-function(rt, summary, data){
     geom_ribbon(data = R_plot_data,
                 aes(ymin = lower, ymax = upper),
                 alpha = 0.5) +
-    scale_y_continuous("R Effective") +
+    scale_y_continuous("R Effective",limits = c(0.0,max(R_plot_data$mid_upper)+0.5)) +
     scale_x_date("Day") +
     theme_classic() +
     theme(text = element_text(size = 16))+

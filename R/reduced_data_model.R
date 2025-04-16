@@ -26,8 +26,12 @@ reduced_data_model <- function(data,
       day = as.integer(date_group) + window,
       week = as_date(day),
       day = day - min(as.integer(date_group))
-    ) %>%
-    filter(row_number() %in% seq(1, n(), by = filter_size))
+    )
+
+  rows_to_keep<- sample(1:nrow(aggregated_real_data),floor(nrow(aggregated_real_data)/filter_size))
+  aggregated_real_data <- aggregated_real_data %>%
+    # filter(row_number() %in% seq(1, n(), by = filter_size))
+    filter(row_number() %in% rows_to_keep)
 
   daily_data <- real_data %>%
     filter(diagnosis_date < max(aggregated_real_data$week))
@@ -48,7 +52,8 @@ reduced_data_model <- function(data,
   )
 
   fit <- rstan::stan(
-    file = "binomial_aggregate.stan",
+    file = "reduced_data.stan",
+    # file = "binomial_aggregate.stan",
     data = stan_data,
     warmup = 8000,
     iter = 20000,

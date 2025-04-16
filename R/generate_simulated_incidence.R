@@ -1,4 +1,4 @@
-generate_simulated_incidence <- function(R_T,generation_interval,initial_incidence){
+generate_simulated_incidence <- function(R_t,generation_interval,initial_incidence){
   n_days <- length(R_t)
   I_t <- rep(initial_incidence, n_days + 1)
   n_generation_interval <- length(generation_interval)
