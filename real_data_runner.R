@@ -174,7 +174,7 @@ for(window_size in list(1,2,4,7, "Random")){
             legend.title = element_blank(),
         legend.text = element_text(size = 10,),
         legend.position = "inside",
-        legend.justification = c(0.90,0.95),
+        legend.justification = c(0.90,0.95)
       )
 
      if(length(xmax)!=0){
