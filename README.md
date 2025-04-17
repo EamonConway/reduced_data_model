@@ -2,6 +2,7 @@
 
 It is quite easy to run the reduced data model.
 First you must construct a data structure that consists of
+ ```
   stan_data <- list(
     N_data, # Number of data points to use.
     D, # Vector of measured aggregated data points.
