@@ -15,6 +15,22 @@ First you must construct a data structure that consists of
     R0, # Prior estiamte for R0
     alpha, # Prior parameters
     beta, #Prior parameter
-    lambda = lambda # Prior parameter
+    lambda # Prior parameter
   )
 ```
+
+The model can then be called by invoking stan.
+```
+  fit <- rstan::stan(
+    file = "reduced_data.stan",
+    data = stan_data,
+    warmup = 8000,
+    iter = 20000,
+    chains = 4,
+    cores = 4,
+    control = list(max_treedepth = 15,
+                   adapt_delta = 0.95)
+  )
+```
+
+The parameters can be tuned so that you get the appropriate convergence of the hamiltonian monte carlo method.
